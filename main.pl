@@ -9,7 +9,6 @@ list([H|T],H,T).
 append([ ],A,A).
 append([A|B],C,[A|D]) :- append(B,C,D).
 
-
 gather(Chars) --> [C],  {alphaNumeric(C)}, gather(Rest), {Chars=[C|Rest]}.
 
 gather([]) --> {true}.
@@ -69,15 +68,43 @@ tokenize([N|R]) --> [C],{C>32},
                         {name(N,[C])},tokenize(R).
 tokenize([])-->[].
 
-%% <program> --> <type-decl-stmts> ; <stmts>
-program(TSBefore, TSAfter, (declarations(DeclarationTree),statements(StatementList))) :-
-     typeDeclarationStatementList(TSBefore, TSAfterDeclaration, DeclarationTree),
-     list(TSAfterDeclaration,';',T),
-     statementList(T, TSAfter, StatementList).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-parseTree(FileName,RT):-
+% Operadores de primera ejecucion
+oper1(+).
+oper1(-).
+
+% Operadores de segunda ejecucion
+oper2(*).
+oper2(/).
+
+% Definicion  <Var> negacion de <oper1>
+asig(X):- atom(X), \+ oper1(X).
+
+% Expresiones al nivel mas simple
+% <expresion> --> <oper1> <expr> | <identificador> | <decimal> | <entero> | <cadena> | (<expresion2>)
+expresion([X|TSFinalX],TSFinal):- oper1(X), expresion2(TSFinalX,TSFinal).
+expresion([X|TSFinal],TSFinal):- asig(X).
+expresion([X|TSFinal],TSFinal):- float(X).
+expresion([X|TSFinal],TSFinal):- string(X).
+expresion([X|TSFinal],TSFinal):- integer(X).
+expresion(['('|TSInicial], TSFinal ):- expresion2(TSInicial, [ ')' | TSFinal ]).
+
+% <expresion1> --> <expresion1> <op2> <expresion> | <expresion>
+expresion1(TSInicial,TSFinal):- expresion(TSInicial,[O|TSFinalX]), oper2(O), expresion1(TSFinalX,TSFinal).
+expresion1(TSInicial,TSFinal):- expresion(TSInicial,TSFinal).
+
+% <expresion2> --> <expresion1> <op1> <expr> | <expresion1>
+expresion2(TSInicial,TSFinal):- expresion1(TSInicial,[O|TSFinalX]), oper1(O), expresion2(TSFinalX,TSFinal).
+expresion2(TSInicial,TSFinal):- expresion1(TSInicial,TSFinal).
+
+% <asignacion> --> <expresion2>
+asignacion([X,=|TSInicialNoX],TSFinal):- asig(X), expresion2(TSInicialNoX,TSFinal).
+
+% Ejecuta el programa
+parseTree(FileName):-
     open(FileName, 'read', InputStream),
     read_stream_to_codes(InputStream, ProgramString),
     close(InputStream),
-    phrase(tokenize(TSBefore), ProgramString),
-    program(TSBefore, [], RT).
+    phrase(tokenize(TSInicial), ProgramString),
+    asignacion(TSInicial, []).
