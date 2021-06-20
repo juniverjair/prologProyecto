@@ -106,3 +106,31 @@ parseTree(FileName):-
     close(InputStream),
     phrase(tokenize(TSInicial), ProgramString),
     asignacion(TSInicial, []).
+
+
+%% Listas de una en 1D en JavaScript (Modo no estricto)
+
+% <type> --> <var> | <let> | <cons>
+type(var).
+type(let).
+type(cons).
+
+% <asignacion> --> <type> <asig>
+asig(X):- atom(X).
+
+% <sep> --> ,
+
+separador(,).
+
+% <dato> --> <decimal> | <cadena> | <entero> | <boleano> | <identificador>
+
+dato(float).
+dato(int).
+dato(string).
+dato(bool).
+
+% <dato1> --> <dato> <sep> <dato> | <dato>
+
+% <dato2> --> <dato1> <sep> <dato1> | <dato1> <sep> <dato1> | <dato1>
+
+% <asignacion> --> <type> <sig> = [ <dato2> ]
