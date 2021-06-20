@@ -106,3 +106,23 @@ parseTree(FileName):-
     close(InputStream),
     phrase(tokenize(TSInicial), ProgramString),
     asignacion(TSInicial, []).
+
+
+% <type> --> <var> | <let> | <cons>
+
+% <sep> --> ,
+
+separador(,).
+
+% <dato> --> <decimal> | <cadena> | <entero> | <boleano> | <identificador>
+
+dato(float).
+dato(int).
+dato(string).
+dato(bool).
+
+% <dato1> --> <dato> <sep> <dato> | <dato>
+
+% <dato2> --> <dato1> <sep> <dato1> | <dato1> <sep> <dato1> | <dato1>
+
+% <asignacion> --> [ <dato2> ]
