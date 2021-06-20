@@ -125,4 +125,4 @@ dato(bool).
 
 % <dato2> --> <dato1> <sep> <dato1> | <dato1> <sep> <dato1> | <dato1>
 
-% <asignacion> --> [ <dato2> ]
+% <asignacion> --> <type> [ <dato2> ]
