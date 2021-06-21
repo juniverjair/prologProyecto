@@ -99,16 +99,11 @@ expresion2(TSInicial,TSFinal):- expresion1(TSInicial,[O|TSFinalX]), oper1(O), ex
 % <asignacion> --> <asig> = <expresion2>
 asignacion([X,=|TSInicialNoX],TSFinal):- asig(X), expresion2(TSInicialNoX,TSFinal).
 
-% Ejecuta el programa
-parseTree(FileName):-
-    open(FileName, 'read', InputStream),
-    read_stream_to_codes(InputStream, ProgramString),
-    close(InputStream),
-    phrase(tokenize(TSInicial), ProgramString),
-    asignacion(TSInicial, []).
-
 
 %% Listas de una en 1D en JavaScript (Modo no estricto)
+
+% <igual> --> =
+igual(=).
 
 % <type> --> <var> | <let> | <cons>
 type(var).
@@ -120,7 +115,7 @@ asig(X):- atom(X).
 
 % <sep> --> ,
 
-separador(,).
+sep(,).
 
 % <dato> --> <decimal> | <cadena> | <entero> | <boleano> | <identificador>
 
@@ -130,7 +125,22 @@ dato(string).
 dato(bool).
 
 % <dato1> --> <dato> <sep> <dato> | <dato>
+expresion1([X|TSFinal],TSFinal):- asig(X) | float(X) | string(X) | integer(X).
 
 % <dato2> --> <dato1> <sep> <dato1> | <dato1> <sep> <dato1> | <dato1>
+expresion2(TSInicial,TSFinal):- expresion1(TSInicial,[O|TSFinalX]), sep(O), expresion2(TSFinalX,TSFinal).
+expresion2(TSInicial,TSFinal):- expresion2(TSInicial,[O|TSFinalX]), sep(O), expresion1(TSFinalX,TSFinal).
+expresion2(TSInicial,TSFinal):-  expresion1(TSInicial,TSFinal).
 
 % <asignacion> --> <type> <sig> = [ <dato2> ]
+expresion(['['|TSInicial], TSFinal ):- expresion2(TSInicial, [ ']' | TSFinal ]).
+
+
+% Ejecuta el programa
+parseTree(FileName):-
+    open(FileName, 'read', InputStream),
+    read_stream_to_codes(InputStream, ProgramString),
+    close(InputStream),
+    phrase(tokenize(TSInicial), ProgramString),
+    asignacion(TSInicial, []).
+
