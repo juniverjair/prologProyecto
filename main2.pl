@@ -70,6 +70,8 @@ tokenize([])-->[].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Listas de una en 1D en JavaScript (Modo no estricto)
+
 % Operadores de primera ejecucion
 oper1(+).
 oper1(-).
@@ -77,30 +79,6 @@ oper1(-).
 % Operadores de segunda ejecucion
 oper2(*).
 oper2(/).
-
-% Definicion  <Var> negacion de <oper1>
-asig(X):- atom(X), \+ oper1(X).
-
-% <expresion> -->  <identificador> | <decimal> | <cadena> | <entero> 
-expresion([X|TSFinal],TSFinal):- asig(X) | float(X) | string(X) | integer(X).
-
-% <expresion> --> <oper1> <expresion2>
-expresion([X|TSFinalX],TSFinal):- oper1(X), expresion2(TSFinalX,TSFinal).
-
-% <expresion> --> (<expresion2>)
-expresion(['('|TSInicial], TSFinal ):- expresion2(TSInicial, [ ')' | TSFinal ]).
-
-% <expresion1> --> <expresion> <oper2> <expresion1> | <expresion>
-expresion1(TSInicial,TSFinal):- expresion(TSInicial,[O|TSFinalX]), oper2(O), expresion1(TSFinalX,TSFinal) | expresion(TSInicial,TSFinal).
-
-% <expresion2> --> <expresion1> <oper1> <expresion2> | <expresion1>
-expresion2(TSInicial,TSFinal):- expresion1(TSInicial,[O|TSFinalX]), oper1(O), expresion2(TSFinalX,TSFinal) | expresion1(TSInicial,TSFinal).
-
-% <asignacion> --> <asig> = <expresion2>
-asignacion([X,=|TSInicialNoX],TSFinal):- asig(X), expresion2(TSInicialNoX,TSFinal).
-
-
-%% Listas de una en 1D en JavaScript (Modo no estricto)
 
 % <igual> --> =
 igual(=).
@@ -110,30 +88,31 @@ type(var).
 type(let).
 type(cons).
 
-% <asignacion> --> <type> <asig>
-asig(X):- atom(X).
+% <asig> --> <atom> \+ <ops>
+ops(X):- igual(X) | oper1(X) | oper2(X).
+asig(ID):- atom(ID)| \+ ops(ID).
 
 % <sep> --> ,
 
 sep(,).
 
-% <dato> --> <decimal> | <cadena> | <entero> | <boleano> | <identificador>
+% <dato> --> <decimal> | <cadena> | <entero> | <identificador>
+expresion([X|TSFinal],TSFinal):- asig(X) | float(X) | string(X) | integer(X).
 
-dato(float).
-dato(int).
-dato(string).
-dato(bool).
+% <expresion2> --> <id> | <decimal> | <cadena> | <entero> | <identificador> 
+expresion2([X|TSEnd_X],TSFinal):- expresion(TSFinal_X,TSFinal).
+expresion2(['('|TSInicial], TSFinal):- expresion(TSInicial, [ ')' | TSFinal ]).
 
-% <dato1> --> <dato> <sep> <dato> | <dato>
-expresion1([X|TSFinal],TSFinal):- asig(X) | float(X) | string(X) | integer(X).
+% <expresion1> --> <expresion1> <sep> <expresion2> | <expresion2>
+expresion1(TSInicial,TSFinal):- expresion2(TSInicial,[S|TSFinal_X]), sep(S), expresion1(TSFinal_X,TSFinal).
+expresion1(TSInicial,TSFinal):- expresion2(TSInicial,TSFinal).
 
-% <dato2> --> <dato1> <sep> <dato1> | <dato1> <sep> <dato1> | <dato1>
-expresion2(TSInicial,TSFinal):- expresion1(TSInicial,[O|TSFinalX]), sep(O), expresion2(TSFinalX,TSFinal).
-expresion2(TSInicial,TSFinal):- expresion2(TSInicial,[O|TSFinalX]), sep(O), expresion1(TSFinalX,TSFinal).
-expresion2(TSInicial,TSFinal):-  expresion1(TSInicial,TSFinal).
+% <expresion> --> <expresion> <sep> <expresion1> | <expresion1>
+expresion(TSInicial,TSFinal):- expresion1(TSInicial,[S|TSFinal_X]), sep(S), expresion(TSFinal_X,TSFinal).
+expresion(TSInicial,TSFinal):- expresion1(TSInicial,TSFinal).
 
-% <asignacion> --> <type> <sig> = [ <dato2> ]
-expresion(['['|TSInicial], TSFinal ):- expresion2(TSInicial, [ ']' | TSFinal ]).
+% <stmt> --> <type> <asig> = <expresion>;
+stmt([T,X,I|TSInicial],TSFinal):- type(T), asig(X), igual(I), expresion(['[]'|TSInicial],[';'|TSFinal]).
 
 
 % Ejecuta el programa
@@ -142,5 +121,5 @@ parseTree(FileName):-
     read_stream_to_codes(InputStream, ProgramString),
     close(InputStream),
     phrase(tokenize(TSInicial), ProgramString),
-    asignacion(TSInicial, []).
+    stmt(TSInicial, []).
 
