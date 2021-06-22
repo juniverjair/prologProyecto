@@ -1,1 +1,1 @@
-var a = "hola", 3.4
+let a = ["hola", 6,]

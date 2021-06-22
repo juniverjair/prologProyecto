@@ -70,7 +70,7 @@ tokenize([])-->[].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Listas de una en 1D en JavaScript (Modo no estricto)
+%% Listas de una en 1D en   avaScript (Modo no estricto)
 
 % Operadores de primera ejecucion
 oper1(+).
@@ -92,26 +92,17 @@ type(cons).
 ops(X):- igual(X) | oper1(X) | oper2(X) | type(X).
 asig(ID):- atom(ID) | \+ ops(ID).
 
-% <sep> --> ,
-sep(,).
-
 % <dato> --> <decimal> | <cadena> | <entero> | <identificador>
-dato([X|TSFinal],TSFinal):- asig(X) | float(X) | string(X) | integer(X).
+dato(X):- float(X) | string(X) | integer(X) | asig(X).
 
-% <expresion2> --> <id> | <decimal> | <cadena> | <entero> | <identificador> 
-expresion2(TSFinal_X,TSFinal):- dato(TSFinal_X,TSFinal).
-expresion2(['('|TSInicial], TSFinal):- dato(TSInicial, [ ')' | TSFinal ]).
+% <listaDatos> --> <dato> , <listaDatos>
+listdatos([X,','|TSInicial],TSFinal):- dato(X),listdatos(TSInicial,TSFinal).
 
-% <expresion1> --> <expresion1> <sep> <expresion2> | <expresion2>
-expresion1(TSInicial,TSFinal):- expresion2(TSInicial,[S|TSFinal_X]), sep(S), expresion1(TSFinal_X,TSFinal).
-expresion1(TSInicial,TSFinal):- expresion2(TSInicial,TSFinal).
+% <listaDatos> --> <dato> 
+listdatos([X|TSFinal],TSFinal):- dato(X).
 
-% <expresion> --> <expresion> <sep> <expresion1> | <expresion1>
-expresion(TSInicial,TSFinal):- expresion1(TSInicial,[S|TSFinal_X]), sep(S), expresion(TSFinal_X,TSFinal).
-expresion(TSInicial,TSFinal):- expresion1(TSInicial,TSFinal).
-
-% <stmt> --> <type> <asig> = <expresion>;
-stmt([T,X,I|TSInicial],TSFinal):- type(T), asig(X), igual(I), expresion(['[]'|TSInicial],[';'|TSFinal]).
+% <stmt> --> <type> <asig> = [ <listaDatos> ];
+stmt([T,X,I,'['|TSInicial],TSFinal):- type(T), asig(X), igual(I), listdatos(TSInicial,[']',';'|TSFinal]).
 
 % Ejecuta el programa
 parseTree(FileName):-
@@ -121,3 +112,20 @@ parseTree(FileName):-
     phrase(tokenize(TSInicial), ProgramString),
     write('TSInicial:'),writeln(TSInicial),
     stmt(TSInicial, []).
+
+
+
+% <expresion2> --> <id> | <decimal> | <cadena> | <entero> | <identificador> 
+% expresion2(TSFinal_X,TSFinal):- dato(TSFinal_X,TSFinal).
+% expresion2(['('|TSInicial], TSFinal):- dato(TSInicial, [ ')' | TSFinal ]).
+
+% <expresion1> --> <expresion1> <sep> <expresion2> | <expresion2>
+% expresion1(TSInicial,TSFinal):- expresion2(TSInicial,TSFinal_X), expresion1(TSFinal_X,TSFinal).
+% expresion1(TSInicial,TSFinal):- expresion2(TSInicial,TSFinal).
+
+% <expresion> --> <expresion> <sep> <expresion1> | <expresion1>
+% expresion(TSInicial,TSFinal):- expresion1(TSInicial,[','|TSFinal_X]), expresion(TSFinal_X,TSFinal).
+% expresion(TSInicial,TSFinal):- expresion1(TSInicial,TSFinal).
+
+
+%parseTree('test2/test2.txt').
