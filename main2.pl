@@ -89,19 +89,18 @@ type(let).
 type(cons).
 
 % <asig> --> <atom> \+ <ops>
-ops(X):- igual(X) | oper1(X) | oper2(X).
-asig(ID):- atom(ID)| \+ ops(ID).
+ops(X):- igual(X) | oper1(X) | oper2(X) | type(X).
+asig(ID):- atom(ID) | \+ ops(ID).
 
 % <sep> --> ,
-
 sep(,).
 
 % <dato> --> <decimal> | <cadena> | <entero> | <identificador>
-expresion([X|TSFinal],TSFinal):- asig(X) | float(X) | string(X) | integer(X).
+dato([X|TSFinal],TSFinal):- asig(X) | float(X) | string(X) | integer(X).
 
 % <expresion2> --> <id> | <decimal> | <cadena> | <entero> | <identificador> 
-expresion2([X|TSEnd_X],TSFinal):- expresion(TSFinal_X,TSFinal).
-expresion2(['('|TSInicial], TSFinal):- expresion(TSInicial, [ ')' | TSFinal ]).
+expresion2(TSFinal_X,TSFinal):- dato(TSFinal_X,TSFinal).
+expresion2(['('|TSInicial], TSFinal):- dato(TSInicial, [ ')' | TSFinal ]).
 
 % <expresion1> --> <expresion1> <sep> <expresion2> | <expresion2>
 expresion1(TSInicial,TSFinal):- expresion2(TSInicial,[S|TSFinal_X]), sep(S), expresion1(TSFinal_X,TSFinal).
@@ -114,12 +113,11 @@ expresion(TSInicial,TSFinal):- expresion1(TSInicial,TSFinal).
 % <stmt> --> <type> <asig> = <expresion>;
 stmt([T,X,I|TSInicial],TSFinal):- type(T), asig(X), igual(I), expresion(['[]'|TSInicial],[';'|TSFinal]).
 
-
 % Ejecuta el programa
 parseTree(FileName):-
     open(FileName, 'read', InputStream),
     read_stream_to_codes(InputStream, ProgramString),
     close(InputStream),
     phrase(tokenize(TSInicial), ProgramString),
+    write('TSInicial:'),writeln(TSInicial),
     stmt(TSInicial, []).
-
