@@ -83,6 +83,13 @@ oper2(/).
 % <igual> --> =
 igual(=).
 
+% <comp> --> == | < | > | <= | >= 
+comp(==).
+comp(>=).
+comp(<=).
+comp(>).
+comp(<).
+
 % <type> --> <var> | <let> | <cons>
 type(var).
 type(let).
@@ -104,15 +111,26 @@ listdatos([X|TSFinal],TSFinal):- dato(X).
 % <stmt> --> <type> <asig> = [ <listaDatos> ];
 stmt([T,X,I,'['|TSInicial],TSFinal):- type(T), asig(X), igual(I), listdatos(TSInicial,[']',';'|TSFinal]).
 
+%% <function>--> <vartype> <atom>(<id_list>) {<listStmt>}
+functionStmt([X,FUNCNAME,'('|TSInicial],TSFinal):- type(X),atom(FUNCNAME),idList(TSInicial,[')','{'|TSFinal_X]),listStmt(TSFinal_X,['}'|TSFinal]).
+
+% <condExpr> --> <exp> <compop> <exp>
+condExpr([D1,X,D2|TSInicial],TSFinal):- dato(D1),comp(X),dato(D2).
+% <ifStmt> --> if (<condExpr>) {<listStmt>} else {<listStmt>}
+ifStmt(['if','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{'|TSFinal_X]),listStmt(TSFinal_X,['}','else','{'|TSFinal_X1]),listStmt(TSFinal_X1,['}'|TSFinal]).
+ifStmt(['if','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{'|TSFinal_X]),listStmt(TSFinal_X,['}'|TSFinal]).
+
+% <whileStmnt> --> while (<condExpr>) {<listStmt>}
+whileStmt(['while','('|TSInicial],TSFinal):- condExpr(TSInit,[')','{'|TSFinal_X]),listStmt(TSFinal_X,['}'|TSFinal]).
+
 % Ejecuta el programa
 parseTree(FileName):-
     open(FileName, 'read', InputStream),
     read_stream_to_codes(InputStream, ProgramString),
     close(InputStream),
     phrase(tokenize(TSInicial), ProgramString),
-    write('TSInicial:'),writeln(TSInicial),
+    % write('TSInicial:'),writeln(TSInicial),
     stmt(TSInicial, []).
-
 
 
 % <expresion2> --> <id> | <decimal> | <cadena> | <entero> | <identificador> 
@@ -126,6 +144,5 @@ parseTree(FileName):-
 % <expresion> --> <expresion> <sep> <expresion1> | <expresion1>
 % expresion(TSInicial,TSFinal):- expresion1(TSInicial,[','|TSFinal_X]), expresion(TSFinal_X,TSFinal).
 % expresion(TSInicial,TSFinal):- expresion1(TSInicial,TSFinal).
-
 
 %parseTree('test2/test2.txt').
