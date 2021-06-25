@@ -111,24 +111,25 @@ listdatos([X|TSFinal],TSFinal):- dato(X).
 % <list> --> <type> <asig> = [ <listaDatos> ];
 listStmt([T,X,I,'['|TSInicial],TSFinal):- type(T), asig(X), igual(I), listdatos(TSInicial,[']',';'|TSFinal]).
 
-%% <funcion>--> function <atom> ( <listadatos> ) { }
-funcionStmt(['funcion',N,'('|TSInicial],TSFinal):- atom(N),listdatos(TSInicial,[')','{','}'|TSFinal]).
+% <function> --> function
+function(function).
 
-% <condExpr> --> <exp> <compop> <exp>
-%condExpr([D1,X,D2|TSInicial],TSFinal):- dato(D1),comp(X),dato(D2).
+% <funcion>--> function <atom> ( <listadatos> ) { }
+funcionStmt([F,N,'('|TSInicial],TSFinal):- function(F),atom(N),listdatos(TSInicial,[')','{','}'|TSFinal]).
 
-%% <condExpr> --> <exp> <compop> <exp>
-
-%% <expr2> --> <id> | <integer> | <numWDecimal> | <stringLiteral> | (<expr>) 
+% <expr2> --> <id> | <integer> | <numWDecimal> | <stringLiteral> | (<expr>) 
 expr2([X|TSEnd_I],TSEnd):-      oper1(X),expr(TSEnd_I,TSEnd).
 expr2([X|TSEnd],TSEnd):-        integer(X).
 expr2([X|TSEnd],TSEnd):-        float(X).
 expr2([X|TSEnd],TSEnd):-        string(X).
+expr2([X|TSEnd],TSEnd):-        asig(X).
 expr2(['('|TSInit], TSEnd ):-   expr(TSInit, [ ')' | TSEnd ]).
-%% <expr1> --> <expr1> <op2> <expr2> | <expr2>
+
+% <expr1> --> <expr1> <op2> <expr2> | <expr2>
 expr1(TSInit,TSEnd):- expr2(TSInit,[OP|TSEnd_I]), oper2(OP), expr1(TSEnd_I,TSEnd).
 expr1(TSInit,TSEnd):- expr2(TSInit,TSEnd).
-%% <expr> --> <expr> <op1> <expr1> | <expr1>
+
+% <expr> --> <expr> <op1> <expr1> | <expr1>
 expr(TSInit,TSEnd):- expr1(TSInit,[OP|TSEnd_I]), oper1(OP), expr(TSEnd_I,TSEnd).
 expr(TSInit,TSEnd):- expr1(TSInit,TSEnd).
 condExpr(TSInit,TSEnd):- expr(TSInit,[X|TSEnd_I]),comp(X),expr(TSEnd_I,TSEnd).
@@ -152,5 +153,5 @@ parseTree(FileName):-
     read_stream_to_codes(InputStream, ProgramString),
     close(InputStream),
     phrase(tokenize(TSInicial), ProgramString),
-    write('TSInicial:'),writeln(TSInicial),
+    % write('TSInicial:'),write(TSInicial),
     stmt(TSInicial, []).

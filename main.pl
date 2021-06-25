@@ -105,4 +105,5 @@ parseTree(FileName):-
     read_stream_to_codes(InputStream, ProgramString),
     close(InputStream),
     phrase(tokenize(TSInicial), ProgramString),
+    write('TSInicial:'),writeln(TSInicial),
     asignacion(TSInicial, []).

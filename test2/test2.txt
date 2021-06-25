@@ -1,1 +1,1 @@
-let a = ["hola", 6,]
+var a = ["hola", 6];
