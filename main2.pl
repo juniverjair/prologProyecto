@@ -108,20 +108,43 @@ listdatos([X,','|TSInicial],TSFinal):- dato(X),listdatos(TSInicial,TSFinal).
 % <listaDatos> --> <dato> 
 listdatos([X|TSFinal],TSFinal):- dato(X).
 
-% <stmt> --> <type> <asig> = [ <listaDatos> ];
-stmt([T,X,I,'['|TSInicial],TSFinal):- type(T), asig(X), igual(I), listdatos(TSInicial,[']',';'|TSFinal]).
+% <list> --> <type> <asig> = [ <listaDatos> ];
+listStmt([T,X,I,'['|TSInicial],TSFinal):- type(T), asig(X), igual(I), listdatos(TSInicial,[']',';'|TSFinal]).
 
-%% <function>--> <vartype> <atom>(<id_list>) {<listStmt>}
-functionStmt([X,FUNCNAME,'('|TSInicial],TSFinal):- type(X),atom(FUNCNAME),idList(TSInicial,[')','{'|TSFinal_X]),listStmt(TSFinal_X,['}'|TSFinal]).
+%% <funcion>--> function <atom> ( <listadatos> ) { }
+funcionStmt(['funcion',N,'('|TSInicial],TSFinal):- atom(N),listdatos(TSInicial,[')','{','}'|TSFinal]).
 
 % <condExpr> --> <exp> <compop> <exp>
-condExpr([D1,X,D2|TSInicial],TSFinal):- dato(D1),comp(X),dato(D2).
+%condExpr([D1,X,D2|TSInicial],TSFinal):- dato(D1),comp(X),dato(D2).
+
+%% <condExpr> --> <exp> <compop> <exp>
+
+%% <expr2> --> <id> | <integer> | <numWDecimal> | <stringLiteral> | (<expr>) 
+expr2([X|TSEnd_I],TSEnd):-      oper1(X),expr(TSEnd_I,TSEnd).
+expr2([X|TSEnd],TSEnd):-        integer(X).
+expr2([X|TSEnd],TSEnd):-        float(X).
+expr2([X|TSEnd],TSEnd):-        string(X).
+expr2(['('|TSInit], TSEnd ):-   expr(TSInit, [ ')' | TSEnd ]).
+%% <expr1> --> <expr1> <op2> <expr2> | <expr2>
+expr1(TSInit,TSEnd):- expr2(TSInit,[OP|TSEnd_I]), oper2(OP), expr1(TSEnd_I,TSEnd).
+expr1(TSInit,TSEnd):- expr2(TSInit,TSEnd).
+%% <expr> --> <expr> <op1> <expr1> | <expr1>
+expr(TSInit,TSEnd):- expr1(TSInit,[OP|TSEnd_I]), oper1(OP), expr(TSEnd_I,TSEnd).
+expr(TSInit,TSEnd):- expr1(TSInit,TSEnd).
+condExpr(TSInit,TSEnd):- expr(TSInit,[X|TSEnd_I]),comp(X),expr(TSEnd_I,TSEnd).
+
 % <ifStmt> --> if (<condExpr>) {<listStmt>} else {<listStmt>}
-ifStmt(['if','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{'|TSFinal_X]),listStmt(TSFinal_X,['}','else','{'|TSFinal_X1]),listStmt(TSFinal_X1,['}'|TSFinal]).
-ifStmt(['if','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{'|TSFinal_X]),listStmt(TSFinal_X,['}'|TSFinal]).
+ifStmt(['if','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{','}','else','{','}'|TSFinal]).
+ifStmt(['if','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{','}'|TSFinal]).
 
 % <whileStmnt> --> while (<condExpr>) {<listStmt>}
-whileStmt(['while','('|TSInicial],TSFinal):- condExpr(TSInit,[')','{'|TSFinal_X]),listStmt(TSFinal_X,['}'|TSFinal]).
+whileStmt(['while','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{','}'|TSFinal]).
+
+%stmt(TSInit,TSEnd) :- forStmt(TSInit,TSEnd).
+stmt(TSInit,TSEnd) :- ifStmt(TSInit,TSEnd).
+stmt(TSInit,TSEnd) :- whileStmt(TSInit,TSEnd).
+stmt(TSInit,TSEnd) :- funcionStmt(TSInit,TSEnd).
+stmt(TSInit,TSEnd) :- listStmt(TSInit,TSEnd).
 
 % Ejecuta el programa
 parseTree(FileName):-
@@ -129,20 +152,5 @@ parseTree(FileName):-
     read_stream_to_codes(InputStream, ProgramString),
     close(InputStream),
     phrase(tokenize(TSInicial), ProgramString),
-    % write('TSInicial:'),writeln(TSInicial),
+    write('TSInicial:'),writeln(TSInicial),
     stmt(TSInicial, []).
-
-
-% <expresion2> --> <id> | <decimal> | <cadena> | <entero> | <identificador> 
-% expresion2(TSFinal_X,TSFinal):- dato(TSFinal_X,TSFinal).
-% expresion2(['('|TSInicial], TSFinal):- dato(TSInicial, [ ')' | TSFinal ]).
-
-% <expresion1> --> <expresion1> <sep> <expresion2> | <expresion2>
-% expresion1(TSInicial,TSFinal):- expresion2(TSInicial,TSFinal_X), expresion1(TSFinal_X,TSFinal).
-% expresion1(TSInicial,TSFinal):- expresion2(TSInicial,TSFinal).
-
-% <expresion> --> <expresion> <sep> <expresion1> | <expresion1>
-% expresion(TSInicial,TSFinal):- expresion1(TSInicial,[','|TSFinal_X]), expresion(TSFinal_X,TSFinal).
-% expresion(TSInicial,TSFinal):- expresion1(TSInicial,TSFinal).
-
-%parseTree('test2/test2.txt').
