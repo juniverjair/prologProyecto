@@ -117,35 +117,35 @@ function(function).
 % <funcion>--> function <atom> ( <listadatos> ) { }
 funcionStmt([F,N,'('|TSInicial],TSFinal):- function(F),atom(N),listdatos(TSInicial,[')','{','}'|TSFinal]).
 
-% <expr2> --> <id> | <integer> | <numWDecimal> | <stringLiteral> | (<expr>) 
-expr2([X|TSEnd_I],TSEnd):-      oper1(X),expr(TSEnd_I,TSEnd).
-expr2([X|TSEnd],TSEnd):-        integer(X).
-expr2([X|TSEnd],TSEnd):-        float(X).
-expr2([X|TSEnd],TSEnd):-        string(X).
-expr2([X|TSEnd],TSEnd):-        asig(X).
-expr2(['('|TSInit], TSEnd ):-   expr(TSInit, [ ')' | TSEnd ]).
+% <expr2> --> <asig> | <string> | <decimal> | <integer> | (<expr>) 
+expr2([X|TSFinal_X],TSFinal):-      oper1(X),expr(TSFinal_X,TSFinal).
+expr2([X|TSFinal],TSFinal):-        integer(X).
+expr2([X|TSFinal],TSFinal):-        float(X).
+expr2([X|TSFinal],TSFinal):-        string(X).
+expr2([X|TSFinal],TSFinal):-        asig(X).
+expr2(['('|TSInicial], TSFinal ):-   expr(TSInicial, [ ')' | TSFinal ]).
 
-% <expr1> --> <expr1> <op2> <expr2> | <expr2>
-expr1(TSInit,TSEnd):- expr2(TSInit,[OP|TSEnd_I]), oper2(OP), expr1(TSEnd_I,TSEnd).
-expr1(TSInit,TSEnd):- expr2(TSInit,TSEnd).
+% <expr1> --> <expr1> <oper2> <expr2> | <expr2>
+expr1(TSInicial,TSFinal):- expr2(TSInicial,[OP|TSFinal_X]), oper2(OP), expr1(TSFinal_X,TSFinal).
+expr1(TSInicial,TSFinal):- expr2(TSInicial,TSFinal).
 
-% <expr> --> <expr> <op1> <expr1> | <expr1>
-expr(TSInit,TSEnd):- expr1(TSInit,[OP|TSEnd_I]), oper1(OP), expr(TSEnd_I,TSEnd).
-expr(TSInit,TSEnd):- expr1(TSInit,TSEnd).
-condExpr(TSInit,TSEnd):- expr(TSInit,[X|TSEnd_I]),comp(X),expr(TSEnd_I,TSEnd).
+% <expr> --> <expr> <oper1> <expr1> | <expr1>
+expr(TSInicial,TSFinal):- expr1(TSInicial,[OP|TSFinal_X]), oper1(OP), expr(TSFinal_X,TSFinal).
+expr(TSInicial,TSFinal):- expr1(TSInicial,TSFinal).
+condicion(TSInicial,TSFinal):- expr(TSInicial,[X|TSFinal_X]),comp(X),expr(TSFinal_X,TSFinal).
 
-% <ifStmt> --> if (<condExpr>) {<listStmt>} else {<listStmt>}
-ifStmt(['if','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{','}','else','{','}'|TSFinal]).
-ifStmt(['if','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{','}'|TSFinal]).
+% <ifStmt> --> if (<condicion>) { } else { }
+ifStmt(['if','('|TSInicial],TSFinal):- condicion(TSInicial,[')','{','}','else','{','}'|TSFinal]).
+ifStmt(['if','('|TSInicial],TSFinal):- condicion(TSInicial,[')','{','}'|TSFinal]).
 
-% <whileStmnt> --> while (<condExpr>) {<listStmt>}
-whileStmt(['while','('|TSInicial],TSFinal):- condExpr(TSInicial,[')','{','}'|TSFinal]).
+% <whileStmnt> --> while (<condicion>) { }
+whileStmt(['while','('|TSInicial],TSFinal):- condicion(TSInicial,[')','{','}'|TSFinal]).
 
-%stmt(TSInit,TSEnd) :- forStmt(TSInit,TSEnd).
-stmt(TSInit,TSEnd) :- ifStmt(TSInit,TSEnd).
-stmt(TSInit,TSEnd) :- whileStmt(TSInit,TSEnd).
-stmt(TSInit,TSEnd) :- funcionStmt(TSInit,TSEnd).
-stmt(TSInit,TSEnd) :- listStmt(TSInit,TSEnd).
+% stmts.
+stmt(TSInicial,TSFinal) :- ifStmt(TSInicial,TSFinal).
+stmt(TSInicial,TSFinal) :- whileStmt(TSInicial,TSFinal).
+stmt(TSInicial,TSFinal) :- funcionStmt(TSInicial,TSFinal).
+stmt(TSInicial,TSFinal) :- listStmt(TSInicial,TSFinal).
 
 % Ejecuta el programa
 parseTree(FileName):-
